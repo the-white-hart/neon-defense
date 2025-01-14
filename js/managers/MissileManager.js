@@ -194,6 +194,8 @@ class MissileManager {
                 if (distance < explosion.radius) {
                     this.gameState.enemyMissiles.splice(i, 1);
                     this.gameState.missilesDestroyed++;
+                    // Ensure score is a number before adding to it
+                    this.gameState.score = Number(this.gameState.score) || 0;
                     this.gameState.score += 10 * this.gameState.scoreMultiplier;
                 }
             }

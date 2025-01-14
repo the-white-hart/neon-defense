@@ -55,9 +55,10 @@ class GameState {
     completeWave() {
         // Calculate bonus points
         const remainingMissileBonus = this.missiles * 5 * this.scoreMultiplier;
-        const remainingCityBonus = this.aliveCityCount * 100 * this.scoreMultiplier;
-        this.score += remainingMissileBonus + remainingCityBonus;
-
+        const cityBonus = 100 * this.scoreMultiplier;  // Base bonus per city
+        this.score = Number(this.score) || 0;  // Ensure score is a number
+        this.score += remainingMissileBonus;  // Add missile bonus
+        
         // Update difficulty
         this.wave++;
         if (this.wave % 2 === 0 && this.scoreMultiplier < 6) {
