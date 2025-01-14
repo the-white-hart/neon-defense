@@ -58,23 +58,22 @@ class GameState {
         const remainingCityBonus = this.aliveCityCount * 100 * this.scoreMultiplier;
         this.score += remainingMissileBonus + remainingCityBonus;
 
-        // Update difficulty (but don't go beyond wave 9)
-        if (this.wave < 9) {
-            this.wave++;
-            if (this.wave % 2 === 0 && this.scoreMultiplier < 6) {
-                this.scoreMultiplier++;
-            }
-
-            // Reset for next level and replenish missiles
-            this.missiles = this.maxMissiles;
-            this.remainingEnemyMissiles = this.getEnemyMissileCount();
-            this.missileInterval = Math.max(500, 2000 - (this.wave - 1) * 100);
-            
-            // Show wave message
-            this.showingWaveMessage = true;
-            this.waveMessageStartTime = performance.now();
-            this.nextMissileTime = this.waveMessageStartTime + 3000;
+        // Update difficulty
+        this.wave++;
+        if (this.wave % 2 === 0 && this.scoreMultiplier < 6) {
+            this.scoreMultiplier++;
         }
+
+        // Reset for next level and replenish missiles
+        this.missiles = this.maxMissiles;
+        this.remainingEnemyMissiles = this.getEnemyMissileCount();
+        this.missileInterval = Math.max(500, 2000 - (this.wave - 1) * 100);
+        this.enemyMissiles = [];  // Clear any remaining missiles
+        
+        // Show wave message
+        this.showingWaveMessage = true;
+        this.waveMessageStartTime = performance.now();
+        this.nextMissileTime = this.waveMessageStartTime + 3000;
     }
 
     getAccuracy() {

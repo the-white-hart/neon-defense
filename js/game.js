@@ -153,47 +153,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         update(deltaTime, currentTime) {
-            if (!this.gameState.running) return;
+            if (!this.running) return;
 
-            // Update HUD warning flash
-            this.hudRenderer.updateWarningFlash(currentTime, this.gameState);
-
-            // Update missiles and check collisions
+            // Update managers
             this.missileManager.update(deltaTime);
             this.missileManager.checkCollisions(this.cityManager.cities);
 
-            // Spawn new enemy missiles
-            if (currentTime >= this.gameState.nextMissileTime && 
-                this.gameState.remainingEnemyMissiles > 0 && 
+            // Check for wave completion
+            if (this.gameState.enemyMissiles.length === 0 && 
+                this.gameState.remainingEnemyMissiles === 0 && 
                 !this.gameState.showingWaveMessage) {
+                this.gameState.completeWave();
+            }
+
+            // Spawn enemy missiles
+            if (!this.gameState.showingWaveMessage && 
+                this.gameState.remainingEnemyMissiles > 0 && 
+                currentTime >= this.gameState.nextMissileTime) {
                 this.missileManager.spawnEnemyMissile(this.cityManager.cities);
                 this.gameState.remainingEnemyMissiles--;
                 this.gameState.nextMissileTime = currentTime + this.gameState.missileInterval;
-            }
-
-            // Check if wave is complete
-            if (this.gameState.remainingEnemyMissiles === 0 && 
-                this.gameState.enemyMissiles.length === 0) {
-                this.gameState.completeWave();
-                
-                // Deploy reserve cities if available
-                while (this.gameState.reserveCities > 0 && 
-                       this.cityManager.getAliveCityCount() < 6) {
-                    this.cityManager.deployReserveCity();
-                    this.gameState.reserveCities--;
-                }
-            }
-
-            // Check if game is over
-            if (this.cityManager.getAliveCityCount() === 0 && 
-                this.gameState.reserveCities === 0) {
-                this.endGame();
             }
 
             // Update wave message
             if (this.gameState.showingWaveMessage && 
                 currentTime - this.gameState.waveMessageStartTime > 3000) {
                 this.gameState.showingWaveMessage = false;
+            }
+
+            // Check for game over
+            if (this.cityManager.cities.every(city => city.destroyed)) {
+                this.endGame();
             }
         }
 

@@ -79,8 +79,9 @@ class MissileManager {
             x: x,
             y: y,
             radius: 0,
-            maxRadius: 30,
-            speed: 100
+            maxRadius: 60,
+            growthRate: 200,
+            duration: 1000
         });
     }
 
@@ -110,8 +111,14 @@ class MissileManager {
         // Update explosions
         for (let i = this.explosions.length - 1; i >= 0; i--) {
             const explosion = this.explosions[i];
-            explosion.radius += explosion.speed * deltaTime / 1000;
-            if (explosion.radius > explosion.maxRadius) {
+            
+            // Grow the explosion
+            if (explosion.radius < explosion.maxRadius) {
+                explosion.radius += explosion.growthRate * (deltaTime / 1000);
+            }
+            
+            // Remove explosion after duration
+            if (explosion.radius >= explosion.maxRadius) {
                 this.explosions.splice(i, 1);
             }
         }
