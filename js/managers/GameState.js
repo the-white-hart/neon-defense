@@ -49,7 +49,13 @@ class GameState {
     }
 
     getEnemyMissileCount() {
-        return this.enemyMissilesPerWave[Math.min(this.wave - 1, this.enemyMissilesPerWave.length - 1)];
+        if (this.wave <= this.enemyMissilesPerWave.length) {
+            return this.enemyMissilesPerWave[this.wave - 1];
+        } else {
+            // For waves beyond the predefined list, increase by 5 each wave
+            return this.enemyMissilesPerWave[this.enemyMissilesPerWave.length - 1] + 
+                   ((this.wave - this.enemyMissilesPerWave.length) * 5);
+        }
     }
 
     completeWave() {
@@ -75,6 +81,9 @@ class GameState {
         this.showingWaveMessage = true;
         this.waveMessageStartTime = performance.now();
         this.nextMissileTime = this.waveMessageStartTime + 3000;
+        
+        // Ensure game is still running
+        this.running = true;
     }
 
     getAccuracy() {

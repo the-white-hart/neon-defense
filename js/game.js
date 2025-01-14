@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         update(deltaTime, currentTime) {
-            if (!this.running) return;
+            if (!this.running || !this.gameState.running) return;
 
             // Update managers
             this.missileManager.update(deltaTime);
@@ -164,6 +164,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.gameState.remainingEnemyMissiles === 0 && 
                 !this.gameState.showingWaveMessage) {
                 this.gameState.completeWave();
+                // Play wave complete sound
+                this.audioManager.playSound('laser');
             }
 
             // Spawn enemy missiles
