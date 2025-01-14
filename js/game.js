@@ -164,6 +164,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.gameState.remainingEnemyMissiles === 0 && 
                 !this.gameState.showingWaveMessage) {
                 this.gameState.completeWave();
+                
+                // Check for victory
+                if (this.gameState.victory) {
+                    this.showVictory();
+                    return;
+                }
+                
                 // Play wave complete sound
                 this.audioManager.playSound('laser');
             }
@@ -300,6 +307,111 @@ document.addEventListener('DOMContentLoaded', () => {
             const menuButton = document.createElement('button');
             menuButton.textContent = 'Return to Menu';
             menuButton.disabled = false;  // Enable by default
+            
+            const highScoresDiv = document.createElement('div');
+            highScoresDiv.className = 'high-scores';
+            
+            const submitScore = () => {
+                const name = nameInput.value.trim();
+                if (name) {
+                    const position = this.gameState.saveHighScore(name);
+                    submitButton.disabled = true;
+                    nameInput.disabled = true;
+                    
+                    // Display high scores table
+                    const highScores = JSON.parse(localStorage.getItem('neonDefenseHighScores')) || [];
+                    if (highScores.length > 0) {
+                        const table = document.createElement('table');
+                        table.innerHTML = `
+                            <tr>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Score</th>
+                                <th>Wave</th>
+                                <th>Accuracy</th>
+                            </tr>
+                            ${highScores.map((score, index) => `
+                                <tr class="${index === position ? 'new-score' : ''}">
+                                    <td>${index + 1}</td>
+                                    <td>${score.name}</td>
+                                    <td>${score.score}</td>
+                                    <td>${score.wave}</td>
+                                    <td>${score.accuracy}%</td>
+                                </tr>
+                            `).join('')}
+                        `;
+                        highScoresDiv.innerHTML = '<h2>High Scores</h2>';
+                        highScoresDiv.appendChild(table);
+                    }
+                }
+            };
+            
+            // Enable submit button when name is entered
+            nameInput.addEventListener('input', () => {
+                submitButton.disabled = !nameInput.value.trim();
+            });
+            
+            // Handle Enter key press
+            nameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !submitButton.disabled) {
+                    submitScore();
+                }
+            });
+            
+            submitButton.addEventListener('click', submitScore);
+            
+            menuButton.addEventListener('click', () => {
+                overlay.remove();
+                this.showMenu();
+            });
+            
+            content.appendChild(title);
+            content.appendChild(stats);
+            content.appendChild(nameInput);
+            content.appendChild(submitButton);
+            content.appendChild(highScoresDiv);
+            content.appendChild(menuButton);
+            
+            overlay.appendChild(content);
+            document.body.appendChild(overlay);
+            
+            setTimeout(() => nameInput.focus(), 100);
+        }
+
+        showVictory() {
+            this.stop();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'game-over-overlay';
+            
+            const content = document.createElement('div');
+            content.className = 'game-over-content';
+            
+            const title = document.createElement('h1');
+            title.textContent = 'VICTORY!';
+            title.style.color = '#0f0';  // Green color for victory
+            
+            const stats = document.createElement('div');
+            stats.className = 'stats';
+            stats.innerHTML = `
+                Congratulations! You've completed all 9 waves!<br><br>
+                Final Score: ${Math.floor(this.gameState.score)}<br>
+                Accuracy: ${this.gameState.getAccuracy()}%<br>
+                Cities Saved: ${this.cityManager.cities.filter(city => !city.destroyed).length}
+            `;
+            
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = 'Enter your name';
+            nameInput.maxLength = 20;
+            
+            const submitButton = document.createElement('button');
+            submitButton.textContent = 'Submit Score';
+            submitButton.disabled = true;
+            
+            const menuButton = document.createElement('button');
+            menuButton.textContent = 'Return to Menu';
+            menuButton.disabled = false;
             
             const highScoresDiv = document.createElement('div');
             highScoresDiv.className = 'high-scores';

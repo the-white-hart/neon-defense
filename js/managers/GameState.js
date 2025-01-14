@@ -32,8 +32,7 @@ class GameState {
             25,  // Wave 6
             30,  // Wave 7
             35,  // Wave 8
-            40,  // Wave 9
-            45   // Wave 10+
+            40   // Wave 9
         ];
         this.remainingEnemyMissiles = this.getEnemyMissileCount();
         this.missileInterval = 2000;
@@ -46,16 +45,11 @@ class GameState {
         // Game state
         this.running = false;
         this.gameOver = false;
+        this.victory = false;
     }
 
     getEnemyMissileCount() {
-        if (this.wave <= this.enemyMissilesPerWave.length) {
-            return this.enemyMissilesPerWave[this.wave - 1];
-        } else {
-            // For waves beyond the predefined list, increase by 5 each wave
-            return this.enemyMissilesPerWave[this.enemyMissilesPerWave.length - 1] + 
-                   ((this.wave - this.enemyMissilesPerWave.length) * 5);
-        }
+        return this.enemyMissilesPerWave[Math.min(this.wave - 1, this.enemyMissilesPerWave.length - 1)];
     }
 
     completeWave() {
@@ -64,6 +58,12 @@ class GameState {
         const cityBonus = 100 * this.scoreMultiplier;  // Base bonus per city
         this.score = Number(this.score) || 0;  // Ensure score is a number
         this.score += remainingMissileBonus;  // Add missile bonus
+
+        // Check for victory at wave 9
+        if (this.wave === 9) {
+            this.victory = true;
+            return;
+        }
         
         // Update difficulty
         this.wave++;
