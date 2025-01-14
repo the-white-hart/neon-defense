@@ -297,27 +297,59 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const menuButton = document.createElement('button');
             menuButton.textContent = 'Return to Menu';
-            menuButton.disabled = true;
+            menuButton.disabled = false;  // Enable by default
             
             const highScoresDiv = document.createElement('div');
             highScoresDiv.className = 'high-scores';
+            
+            const submitScore = () => {
+                const name = nameInput.value.trim();
+                if (name) {
+                    const position = this.gameState.saveHighScore(name);
+                    submitButton.disabled = true;
+                    nameInput.disabled = true;
+                    
+                    // Display high scores table
+                    const highScores = JSON.parse(localStorage.getItem('neonDefenseHighScores')) || [];
+                    if (highScores.length > 0) {
+                        const table = document.createElement('table');
+                        table.innerHTML = `
+                            <tr>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Score</th>
+                                <th>Wave</th>
+                                <th>Accuracy</th>
+                            </tr>
+                            ${highScores.map((score, index) => `
+                                <tr class="${index === position ? 'new-score' : ''}">
+                                    <td>${index + 1}</td>
+                                    <td>${score.name}</td>
+                                    <td>${score.score}</td>
+                                    <td>${score.wave}</td>
+                                    <td>${score.accuracy}%</td>
+                                </tr>
+                            `).join('')}
+                        `;
+                        highScoresDiv.innerHTML = '<h2>High Scores</h2>';
+                        highScoresDiv.appendChild(table);
+                    }
+                }
+            };
             
             // Enable submit button when name is entered
             nameInput.addEventListener('input', () => {
                 submitButton.disabled = !nameInput.value.trim();
             });
             
-            submitButton.addEventListener('click', () => {
-                const name = nameInput.value.trim();
-                if (name) {
-                    const position = this.gameState.saveHighScore(name);
-                    
-                    submitButton.disabled = true;
-                    nameInput.disabled = true;
-                    menuButton.disabled = false;
-                    menuButton.focus();
+            // Handle Enter key press
+            nameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !submitButton.disabled) {
+                    submitScore();
                 }
             });
+            
+            submitButton.addEventListener('click', submitScore);
             
             menuButton.addEventListener('click', () => {
                 overlay.remove();
