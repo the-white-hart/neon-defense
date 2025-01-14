@@ -99,10 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Load background images
             this.backgroundImage = new Image();
-            this.backgroundImage.src = './assets/images/bg.jpg';
+            this.backgroundImage.src = '/assets/images/bg.jpg';
             
             this.menuBackgroundImage = new Image();
-            this.menuBackgroundImage.src = './assets/images/neon_city.webp';
+            this.menuBackgroundImage.src = '/assets/images/neon_city.webp';
         }
 
         setupCanvas() {
@@ -117,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         start() {
             this.running = true;
+            this.gameState.running = true;
             this.audioManager.startMusic();
             this.gameLoop(performance.now());
             

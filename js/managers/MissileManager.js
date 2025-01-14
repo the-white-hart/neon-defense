@@ -11,7 +11,7 @@ class MissileManager {
     loadMissileImages() {
         for (let i = 1; i <= 10; i++) {
             const img = new Image();
-            img.src = `./assets/images/missiles/${i.toString().padStart(2, '0')}.png`;
+            img.src = `/assets/images/missiles/${i.toString().padStart(2, '0')}.png`;
             this.missileImages.push(img);
         }
     }

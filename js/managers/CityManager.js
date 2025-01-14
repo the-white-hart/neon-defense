@@ -10,7 +10,7 @@ class CityManager {
     loadCityImages() {
         for (let i = 1; i <= 6; i++) {
             const img = new Image();
-            img.src = `./assets/images/cities/00${i}-${i === 1 ? 'buildings' : 
+            img.src = `/assets/images/cities/00${i}-${i === 1 ? 'buildings' : 
                                                 i === 2 ? 'architecture-and-city' :
                                                 i === 3 ? 'cityscape' :
                                                 i === 4 ? 'smart-city' :
