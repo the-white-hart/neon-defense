@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
             this.audioManager = new AudioManager();
             this.hudRenderer = new HUDRenderer(this.ctx);
             this.cityManager = new CityManager(this.ctx);
-            this.missileManager = new MissileManager(this.ctx, this.gameState);
+            this.missileManager = new MissileManager(this.ctx, this.gameState, this.audioManager);
             
             // Initialize game state
             this.lastTime = performance.now();

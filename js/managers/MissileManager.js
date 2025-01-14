@@ -1,7 +1,8 @@
 class MissileManager {
-    constructor(ctx, gameState) {
+    constructor(ctx, gameState, audioManager) {
         this.ctx = ctx;
         this.gameState = gameState;
+        this.audioManager = audioManager;
         this.playerMissiles = [];
         this.explosions = [];
         this.missileImages = [];
@@ -79,7 +80,7 @@ class MissileManager {
             x: x,
             y: y,
             radius: 0,
-            maxRadius: 60,
+            maxRadius: 90,
             growthRate: 200,
             duration: 1000
         });
@@ -212,8 +213,10 @@ class MissileManager {
                         city.health -= 50;
                         if (city.health <= 0) {
                             city.destroyed = true;
+                            this.audioManager.playSound('cityDestroyed');
                         } else {
                             city.damaged = true;
+                            this.audioManager.playSound('cityDamaged');
                         }
                         break;
                     }
