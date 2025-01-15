@@ -15,10 +15,7 @@ class GameState {
         // Wave and scoring system
         this.wave = 1;
         this.score = 0;
-        this.scoreMultiplier = 1;
         this.reserveCities = 0;
-        this.nextBonusCityScore = 10000;
-        this.bonusCityInterval = 10000;
         
         // Enemy wave management
         this.enemyMissiles = [];
@@ -34,13 +31,15 @@ class GameState {
             35,  // Wave 8
             40   // Wave 9
         ];
+        
+        // Initialize wave
         this.remainingEnemyMissiles = this.getEnemyMissileCount();
         this.missileInterval = 2000;
-        this.nextMissileTime = performance.now();
         
-        // Wave message
-        this.showingWaveMessage = false;
-        this.waveMessageStartTime = 0;
+        // Wave message and timing
+        this.showingWaveMessage = true;
+        this.waveMessageStartTime = performance.now();
+        this.nextMissileTime = this.waveMessageStartTime + 3000;
 
         // Game state
         this.running = false;
@@ -53,45 +52,43 @@ class GameState {
     }
 
     completeWave() {
-        // Calculate bonus points
-        const remainingMissileBonus = this.missiles * 5 * this.scoreMultiplier;
-        const cityBonus = 100 * this.scoreMultiplier;  // Base bonus per city
-        this.score = Number(this.score) || 0;  // Ensure score is a number
-        this.score += remainingMissileBonus;  // Add missile bonus
-
-        // Check for victory at wave 9
-        if (this.wave === 9) {
+        this.wave++;
+        
+        // Check for victory after wave 9
+        if (this.wave > 9) {
             this.victory = true;
             return;
         }
         
-        // Update difficulty
-        this.wave++;
-        if (this.wave % 2 === 0 && this.scoreMultiplier < 6) {
-            this.scoreMultiplier++;
-        }
-
-        // Reset for next level and replenish missiles
+        // Reset for next wave
         this.missiles = this.maxMissiles;
         this.remainingEnemyMissiles = this.getEnemyMissileCount();
-        this.missileInterval = Math.max(500, 2000 - (this.wave - 1) * 100);
-        this.enemyMissiles = [];  // Clear any remaining missiles
+        // Decrease missile spawn interval each wave
+        this.missileInterval = Math.max(500, 2000 - (this.wave - 1) * 200);
+        this.enemyMissiles = [];
         
         // Show wave message
         this.showingWaveMessage = true;
         this.waveMessageStartTime = performance.now();
         this.nextMissileTime = this.waveMessageStartTime + 3000;
-        
-        // Ensure game is still running
-        this.running = true;
+
+        console.log('Wave completed:', {
+            newWave: this.wave,
+            remainingMissiles: this.remainingEnemyMissiles,
+            interval: this.missileInterval
+        });
     }
 
     getAccuracy() {
         return this.totalShots > 0 ? Math.round((this.missilesDestroyed / this.totalShots) * 100) : 0;
     }
 
+    getHighScores() {
+        return JSON.parse(localStorage.getItem('neonDefenseHighScores')) || [];
+    }
+
     saveHighScore(name) {
-        const highScores = JSON.parse(localStorage.getItem('neonDefenseHighScores')) || [];
+        const highScores = this.getHighScores();
         const newScore = {
             name: name,
             score: Math.floor(this.score),
@@ -104,7 +101,6 @@ class GameState {
         highScores.splice(10); // Keep only top 10
         
         localStorage.setItem('neonDefenseHighScores', JSON.stringify(highScores));
-        
         return highScores.findIndex(score => score === newScore);
     }
 }

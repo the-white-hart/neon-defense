@@ -161,39 +161,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Check for wave completion
             if (this.gameState.enemyMissiles.length === 0 && 
-                this.gameState.remainingEnemyMissiles === 0 && 
+                this.gameState.remainingEnemyMissiles <= 0 && 
                 !this.gameState.showingWaveMessage) {
-                this.gameState.completeWave();
                 
-                // Check for victory
-                if (this.gameState.victory) {
-                    this.showVictory();
-                    return;
-                }
+                this.gameState.completeWave();
                 
                 // Play wave complete sound
                 this.audioManager.playSound('laser');
             }
 
-            // Spawn enemy missiles
+            // Spawn enemy missiles only if we have remaining missiles and not showing wave message
             if (!this.gameState.showingWaveMessage && 
                 this.gameState.remainingEnemyMissiles > 0 && 
                 currentTime >= this.gameState.nextMissileTime) {
+                
                 this.missileManager.spawnEnemyMissile(this.cityManager.cities);
                 this.gameState.remainingEnemyMissiles--;
                 this.gameState.nextMissileTime = currentTime + this.gameState.missileInterval;
             }
 
-            // Update wave message
+            // Update wave message with fixed duration
             if (this.gameState.showingWaveMessage && 
-                currentTime - this.gameState.waveMessageStartTime > 3000) {
+                currentTime - this.gameState.waveMessageStartTime >= 3000) {
                 this.gameState.showingWaveMessage = false;
+                // Set next missile time after wave message ends
+                this.gameState.nextMissileTime = currentTime + 1000; // 1 second delay before first missile
             }
 
             // Check for game over
             if (this.cityManager.cities.every(city => city.destroyed)) {
                 this.endGame();
             }
+
+            // Update HUD warning flash
+            this.hudRenderer.updateWarningFlash(currentTime, this.gameState);
         }
 
         render() {
@@ -279,21 +280,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showGameOver() {
             const overlay = document.createElement('div');
-            overlay.className = 'game-over-overlay';
+            overlay.className = 'overlay';
             
             const content = document.createElement('div');
-            content.className = 'game-over-content';
+            content.className = 'game-over';
             
             const title = document.createElement('h1');
             title.textContent = 'THE END';
             
             const stats = document.createElement('div');
             stats.className = 'stats';
-            stats.innerHTML = `
-                Final Score: ${Math.floor(this.gameState.score)}<br>
-                Waves Survived: ${this.gameState.wave}<br>
-                Accuracy: ${this.gameState.getAccuracy()}%
-            `;
+            stats.innerHTML = `Final Score: ${Math.floor(this.gameState.score)}<br>
+                Waves Survived: ${this.gameState.wave - 1}<br>
+                Accuracy: ${this.gameState.getAccuracy()}%`;
+            
+            const highScores = document.createElement('div');
+            highScores.className = 'high-scores';
+            highScores.innerHTML = '<h2>TOP SCORES</h2>';
+            const scoresList = document.createElement('div');
+            scoresList.className = 'scores-list';
+            this.updateHighScores(scoresList);
+            highScores.appendChild(scoresList);
             
             const nameInput = document.createElement('input');
             nameInput.type = 'text';
@@ -302,80 +309,60 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const submitButton = document.createElement('button');
             submitButton.textContent = 'Submit Score';
-            submitButton.disabled = true;
             
             const menuButton = document.createElement('button');
             menuButton.textContent = 'Return to Menu';
-            menuButton.disabled = false;  // Enable by default
+            menuButton.style.display = 'block';
             
-            const highScoresDiv = document.createElement('div');
-            highScoresDiv.className = 'high-scores';
+            nameInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    if (!nameInput.disabled) {
+                        submitButton.click();
+                    } else {
+                        menuButton.click();
+                    }
+                }
+            });
             
-            const submitScore = () => {
+            submitButton.addEventListener('click', () => {
                 const name = nameInput.value.trim();
                 if (name) {
                     const position = this.gameState.saveHighScore(name);
-                    submitButton.disabled = true;
+                    this.updateHighScores(scoresList);
                     nameInput.disabled = true;
-                    
-                    // Display high scores table
-                    const highScores = JSON.parse(localStorage.getItem('neonDefenseHighScores')) || [];
-                    if (highScores.length > 0) {
-                        const table = document.createElement('table');
-                        table.innerHTML = `
-                            <tr>
-                                <th>Rank</th>
-                                <th>Name</th>
-                                <th>Score</th>
-                                <th>Wave</th>
-                                <th>Accuracy</th>
-                            </tr>
-                            ${highScores.map((score, index) => `
-                                <tr class="${index === position ? 'new-score' : ''}">
-                                    <td>${index + 1}</td>
-                                    <td>${score.name}</td>
-                                    <td>${score.score}</td>
-                                    <td>${score.wave}</td>
-                                    <td>${score.accuracy}%</td>
-                                </tr>
-                            `).join('')}
-                        `;
-                        highScoresDiv.innerHTML = '<h2>High Scores</h2>';
-                        highScoresDiv.appendChild(table);
-                    }
-                }
-            };
-            
-            // Enable submit button when name is entered
-            nameInput.addEventListener('input', () => {
-                submitButton.disabled = !nameInput.value.trim();
-            });
-            
-            // Handle Enter key press
-            nameInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !submitButton.disabled) {
-                    submitScore();
+                    submitButton.style.display = 'none';
+                    menuButton.focus();
                 }
             });
-            
-            submitButton.addEventListener('click', submitScore);
             
             menuButton.addEventListener('click', () => {
-                overlay.remove();
                 this.showMenu();
+                document.body.removeChild(overlay);
             });
             
             content.appendChild(title);
             content.appendChild(stats);
+            content.appendChild(highScores);
             content.appendChild(nameInput);
             content.appendChild(submitButton);
-            content.appendChild(highScoresDiv);
             content.appendChild(menuButton);
-            
             overlay.appendChild(content);
             document.body.appendChild(overlay);
             
             setTimeout(() => nameInput.focus(), 100);
+        }
+
+        updateHighScores(container) {
+            const highScores = this.gameState.getHighScores();
+            container.innerHTML = highScores.map((score, index) => `
+                <div class="score-entry">
+                    <span>${index + 1}</span>
+                    <span>${score.name}</span>
+                    <span>${score.score}</span>
+                    <span>Wave ${score.wave}</span>
+                    <span>${score.accuracy}%</span>
+                </div>
+            `).join('');
         }
 
         showVictory() {
@@ -411,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const menuButton = document.createElement('button');
             menuButton.textContent = 'Return to Menu';
-            menuButton.disabled = false;
             
             const highScoresDiv = document.createElement('div');
             highScoresDiv.className = 'high-scores';
@@ -463,6 +449,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
             
+            // Handle Enter key press after score submission
+            document.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && submitButton.disabled) {
+                    overlay.remove();
+                    this.showMenu();
+                }
+            });
+            
             submitButton.addEventListener('click', submitScore);
             
             menuButton.addEventListener('click', () => {
@@ -481,6 +475,28 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(overlay);
             
             setTimeout(() => nameInput.focus(), 100);
+            
+            document.getElementById('submit-score-button').addEventListener('click', () => {
+                const playerName = document.getElementById('score-input').value;
+                if (playerName) {
+                    this.submitScore(playerName);
+                }
+            });
+
+            // Add Enter key activation for buttons
+            document.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    const activeElement = document.activeElement;
+                    if (activeElement.id === 'score-input') {
+                        document.getElementById('submit-score-button').click();
+                    } else {
+                        const activeButton = document.querySelector('.active-button');
+                        if (activeButton) {
+                            activeButton.click();
+                        }
+                    }
+                }
+            });
         }
 
         showMenu() {

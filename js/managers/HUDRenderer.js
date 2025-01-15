@@ -24,7 +24,7 @@ class HUDRenderer {
         this.ctx.fillText(`Score: ${Math.floor(gameState.score)}`, 20, 40);
         this.ctx.fillText(`Shots Remaining: ${gameState.missiles}`, 20, 70);
         this.ctx.fillText(`Wave: ${gameState.wave}`, 20, 100);
-        this.ctx.fillText(`Multiplier: ${gameState.scoreMultiplier}x`, 20, 130);
+        this.ctx.fillText(`Multiplier: ${gameState.wave}x`, 20, 130);
         this.ctx.fillText(`Missiles Remaining: ${gameState.remainingEnemyMissiles}`, 20, 160);
         
         // Draw low ammo warning
